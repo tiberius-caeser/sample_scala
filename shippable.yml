@@ -3,6 +3,11 @@ language: scala
 scala:
     - 2.11.0
 
+env:
+  global:
+    - SLACK_ORG=shippable PROJECT=sample-scala
+    -  secure: YFLLH8NCSZCdOe/FsYOh46IuCxyNVTxhWlfRtfu8b58juNRUDx+3GDiuerAAcIchNjis30I+IISYT0HeZQ72kM+bTq976CopGyCkd5cy2nPZzq03vXGs/3UwVLD+WkU4bVPU9FUXW+52S0gykVzT1ZzOyWN+fm62naSDbmV7KlcHgZhfASsVuHqeOHrrUHNrpZqCr+oKAtGzsyHLPs1JrPRGf7gTYTU9reyXHHPuajU79Gk5A+EiaAXkLHc3mk/1Knf4Nye87TZ+zl36vFvKsxLI4ZAZbHdM64ErtnLW7PSXM6p791U+HncBiqGp4ggyWbWDogruafw/L/OnZfqKcg==
+
 script:
   - export SBT_OPTS="-XX:+CMSClassUnloadingEnabled -XX:PermSize=256M -XX:MaxPermSize=512M"
   - sbt clean scoverage:test
@@ -11,6 +16,17 @@ after_script:
   - mkdir -p shippable/codecoverage
   - mv target/scala-2.11/coverage-report/cobertura.xml $PWD/shippable/codecoverage/
 
+after_failure:
+  - python slack_notifier.py --project $PROJECT --org $SLACK_ORG --token $SLACK_TOKEN
+
+after_success:
+  - python slack_notifier.py --project $PROJECT --org $SLACK_ORG --token $SLACK_TOKEN -s
+
 notifications:
-  email:
-    - exampleone@org.com    
+     email:
+         recipients:
+             - avniel+buildsample@shippable.com
+         on_success: never
+         on_failure: always
+
+reset_minion: true
